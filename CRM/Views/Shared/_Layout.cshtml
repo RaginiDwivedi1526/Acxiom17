@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - CRM System</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height: 100vh;
+            width: 260px;
+            background-color: #1f2937; /* Dark background */
+            position: fixed;
+            padding-top: 20px;
+            color: white;
+            z-index: 1000;
+        }
+
+            .sidebar h3 {
+                padding-left: 20px;
+                margin-bottom: 30px;
+                font-weight: bold;
+            }
+
+            .sidebar a, .sidebar button { /* Apply styles to links and the logout button */
+                padding: 12px 20px;
+                display: flex; /* Use flex for icon/text alignment */
+                align-items: center;
+                color: white;
+                text-decoration: none;
+                font-size: 16px;
+                border-radius: 8px;
+                margin: 5px 10px;
+                transition: background-color 0.2s;
+            }
+
+                .sidebar a:hover, .sidebar button:hover {
+                    background-color: #374151; /* Slightly lighter hover */
+                }
+
+        /* Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 20px;
+        }
+
+        /* The key active class */
+        .active-menu {
+            background-color: #2563eb !important; /* Blue active link */
+            font-weight: bold;
+        }
+
+        .sidebar i {
+            margin-right: 10px; /* Space between icon and text */
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h3>🚀 CRM System</h3>
+
+        <a asp-controller="Home" asp-action="Index" data-path="/home/index">
+            <i class="bi bi-house-door"></i> Home
+        </a>
+        <a asp-controller="Customers" asp-action="Index" data-path="/customers/index">
+            <i class="bi bi-person-circle"></i> Customers
+        </a>
+        <a asp-controller="Employees" asp-action="Index" data-path="/employees/index">
+            <i class="bi bi-briefcase"></i> Employees
+        </a>
+
+        <hr style="border-top: 1px solid #374151; margin: 15px 10px;">
+
+        @* 🔎 NEW SEARCH LINK ADDED HERE *@
+        <a asp-controller="Search" asp-action="Index" data-path="/search/index">
+            <i class="bi bi-search"></i> Search All
+        </a>
+
+        <a asp-controller="Report" asp-action="Generate" data-path="/report/generate">
+            <i class="bi bi-file-earmark-bar-graph"></i> Reports
+        </a>
+        <a asp-controller="Report" asp-action="Generate" data-path="/report/generate">
+            @* Note: You may want to update this Dashboard link to go to a separate action if needed *@
+            <i class="bi bi-speedometer"></i> Dashboard
+        </a>
+
+        <hr style="border-top: 1px solid #374151; margin: 15px 10px;">
+
+        <a asp-controller="Home" asp-action="Privacy" data-path="/home/privacy">
+            <i class="bi bi-gear"></i> Settings
+        </a>
+
+        <form asp-controller="Account" asp-action="Logout" method="post" class="w-100">
+            @* Logout button styled as a link button, using w-100 and placed inside a form for security *@
+            <button type="submit" class="btn btn-link text-white text-decoration-none w-100" style="text-align: left; padding: 12px 20px;">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </form>
+
+    </div>
+
+    <div class="main-content">
+        @RenderBody()
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get the current URL path and clean it for case-insensitive matching
+            let currentPath = window.location.pathname.toLowerCase();
+
+            // Clean up: remove trailing slash and ensure leading slash
+            if (currentPath.length > 1 && currentPath.endsWith('/')) {
+                currentPath = currentPath.slice(0, -1);
+            }
+            if (!currentPath.startsWith('/')) {
+                currentPath = '/' + currentPath;
+            }
+
+            // Handle /controller/index pattern
+            const segments = currentPath.split('/');
+            const controllerOnlyPath = segments.length > 2 ? '/' + segments[1] : currentPath;
+
+
+            const sidebarLinks = document.querySelectorAll('.sidebar a');
+
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active-menu');
+
+                // Using link.pathname is more direct than new URL().pathname
+                let linkPath = new URL(link.href, window.location.origin).pathname.toLowerCase();
+
+                // Clean up the link's path, similar to the current path
+                if (linkPath.length > 1 && linkPath.endsWith('/')) {
+                    linkPath = linkPath.slice(0, -1);
+                }
+
+                // 1. Exact Match Check (e.g., /search/index === /search/index)
+                if (currentPath === linkPath) {
+                    link.classList.add('active-menu');
+                    return;
+                }
+
+                // 2. Controller/Root Match (e.g., If URL is /customers/details/5, highlight /customers/index link)
+                // Extract controller part from link (e.g., '/customers/index' -> '/customers')
+                const linkControllerBase = linkPath.split('/').slice(0, 2).join('/');
+                const currentControllerBase = currentPath.split('/').slice(0, 2).join('/');
+
+
+                if (linkPath.endsWith('/index') && linkControllerBase === currentControllerBase && linkControllerBase !== '/') {
+                    link.classList.add('active-menu');
+                    return;
+                }
+
+                // 3. Special Home Page Match (handles / or /home matching /home/index)
+                if (linkPath === '/home/index' && (currentPath === '/' || currentPath === '/home')) {
+                    link.classList.add('active-menu');
+                    return;
+                }
+            });
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>
